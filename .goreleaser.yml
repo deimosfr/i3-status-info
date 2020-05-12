@@ -1,0 +1,15 @@
+builds:
+  - main: main.go
+    binary: i3-status-info
+    goos:
+      - linux
+    goarch:
+      - amd64
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
