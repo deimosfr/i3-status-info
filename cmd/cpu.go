@@ -6,6 +6,7 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/spf13/cobra"
 	"os"
+	"time"
 )
 
 var warningCpuThreshold int8
@@ -29,7 +30,7 @@ func init() {
 }
 
 func showCpuInfo() {
-	v, _ := cpu.Percent(0, false)
+	v, _ := cpu.Percent(time.Second, false)
 
 	color := utils.DefineColor(int8(v[0]), warningCpuThreshold, criticalCpuThreshold)
 	printable := fmt.Sprintf("%.1f%%", v[0])
