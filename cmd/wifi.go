@@ -30,9 +30,14 @@ var getWifi = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(getWifi)
-	getWifi.Flags().StringVar(&wifiInterface, "wifiInterface", "", "Wifi device interface")
 	getWifi.Flags().Int8Var(&warningWifiThreshold, "warning", 50, "Warning threshold ([2-100])")
 	getWifi.Flags().Int8Var(&criticalWifiThreshold, "critical", 30, "Critical threshold ([1-99])")
+	getWifi.Flags().StringVar(&wifiInterface, "wifiInterface", "", "Wifi device interface")
+	err := getWifi.MarkFlagRequired("wifiInterface")
+	if err != nil {
+		println(err)
+		os.Exit(1)
+	}
 }
 
 func showWifiInfo(device string) {
