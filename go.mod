@@ -10,6 +10,7 @@ require (
 	github.com/mdlayher/wifi v0.0.0-20190303161829-b1436901ddee
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/shirou/gopsutil v2.20.4+incompatible
+	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.3
 	github.com/xellio/tools v0.0.0-20180807142225-794d9ef78e7d

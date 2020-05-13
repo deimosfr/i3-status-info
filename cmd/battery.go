@@ -30,18 +30,32 @@ func init() {
 
 func showBatteryInfo() {
 	color := ""
+	batteryNumber := 0
 
 	batInfo, err := acpi.Battery()
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	icon := iconSelector(batInfo[0].Level, batInfo[0].Status)
-	if batInfo[0].Status == "Discharging" {
-		color = utils.DefineReverseColor(int8(batInfo[0].Level), warningBatteryThreshold, criticalBatteryThreshold)
+	// Need this because of non idempotency on returned batteries
+	if len(batInfo) > 1 {
+		for batteryCurrentNumber := range batInfo {
+			if batInfo[batteryCurrentNumber].Level != 0 {
+				batteryNumber = batteryCurrentNumber
+				break
+			}
+		}
 	}
 
-	printable := fmt.Sprintf("%s %d%%", icon, batInfo[0].Level)
+	batteryLevel := batInfo[batteryNumber].Level
+	batteryStatus := batInfo[batteryNumber].Status
+
+	icon := iconSelector(batteryLevel, batteryStatus)
+	if batInfo[batteryNumber].Status == "Discharging" {
+		color = utils.DefineReverseColor(int8(batteryLevel), warningBatteryThreshold, criticalBatteryThreshold)
+	}
+
+	printable := fmt.Sprintf("%s %d%%", icon, batteryLevel)
 	utils.ColorPrint(printable, color)
 }
 
