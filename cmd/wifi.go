@@ -21,7 +21,7 @@ var getWifi = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		if !wifiCheckFlags() {
+		if !utils.CheckReversePercentage(warningWifiThreshold, warningWifiThreshold) {
 			os.Exit(1)
 		}
 		showWifiInfo(device)
@@ -35,26 +35,9 @@ func init() {
 	getWifi.Flags().Int8Var(&criticalWifiThreshold, "critical", 30, "Critical threshold ([1-99])")
 }
 
-func wifiCheckFlags() bool {
-	if warningWifiThreshold > 100 || warningWifiThreshold < 2 {
-		fmt.Println("Warning threshold should be set between 2 and 100")
-		return false
-	}
-	if criticalWifiThreshold < 1 || criticalWifiThreshold > 99 {
-		fmt.Println("Critical threshold should be set between 1 and 99")
-		return false
-	}
-	if warningWifiThreshold < criticalWifiThreshold {
-		fmt.Printf("Warning threshold (%d) can't be lower than critical threshold (%d)\n", warningWifiThreshold, criticalWifiThreshold)
-		return false
-	}
-	return true
-}
-
 func showWifiInfo(device string) {
 	var printable string
 	var validPercentage int8
-	color := ""
 	WifiCoef := 1.8
 
 	client, _ := wifi.New()
@@ -73,12 +56,7 @@ func showWifiInfo(device string) {
 		break
 	}
 
-	if validPercentage < criticalWifiThreshold {
-		color="#FF0000"
-	} else if validPercentage < warningWifiThreshold {
-		color="#FFFC00"
-	}
-
+	color := utils.DefineReverseColor(validPercentage, warningWifiThreshold, criticalWifiThreshold)
 	utils.ColorPrint(printable, color)
 }
 

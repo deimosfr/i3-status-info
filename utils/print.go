@@ -10,10 +10,19 @@ func ColorPrint(message string, color string) {
 	}
 }
 
-func DefineColor(currentPercent int8, warningCpuThreshold int8, criticalCpuThreshold int8) string {
-	if currentPercent > criticalCpuThreshold {
+func DefineColor(currentPercent int8, warningThreshold int8, criticalThreshold int8) string {
+	if currentPercent > criticalThreshold {
 		return "#FF0000"
-	} else if currentPercent > warningCpuThreshold {
+	} else if currentPercent > warningThreshold {
+		return "#FFFC00"
+	}
+	return ""
+}
+
+func DefineReverseColor(currentPercent int8, warningThreshold int8, criticalThreshold int8) string {
+	if currentPercent < criticalThreshold {
+		return "#FF0000"
+	} else if currentPercent < warningThreshold {
 		return "#FFFC00"
 	}
 	return ""
