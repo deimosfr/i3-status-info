@@ -1,4 +1,4 @@
-# i3-status-info
+# i3-status-info ![Master](https://github.com/deimosfr/i3-status-info/workflows/Push/badge.svg)
 
 Some of my i3 status info colored for i3blocks
 
@@ -6,6 +6,8 @@ The main advantages are:
 * 1 binary for several elements (disk, cpu, mem...)
 * colored output based on custom thresholds
 * slow cpu and memory consumption
+
+![screenshot](assets/i3-status-info.png)
 
 ```
 $ i3_status_info --help
