@@ -61,7 +61,7 @@ func showBatteryInfo() {
 
 func iconSelector(currentPercentage int, status string) string {
 	var icon string
-	if status == "Discharging" {
+	if status == "Discharging" || status == "Unknown" {
 		if currentPercentage < 20 {
 			icon=""
 		} else if currentPercentage < 40 {
