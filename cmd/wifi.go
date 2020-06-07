@@ -6,11 +6,13 @@ import (
 	"github.com/mdlayher/wifi"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 var wifiInterface string
 var warningWifiThreshold int8
 var criticalWifiThreshold int8
+var hideSsidName bool
 
 var getWifi = &cobra.Command{
 	Use:   "wifi",
@@ -24,7 +26,7 @@ var getWifi = &cobra.Command{
 		if !utils.CheckReversePercentage(warningWifiThreshold, warningWifiThreshold) {
 			os.Exit(1)
 		}
-		showWifiInfo(device)
+		showWifiInfo(device, hideSsidName)
 	},
 }
 
@@ -33,6 +35,7 @@ func init() {
 	getWifi.Flags().Int8Var(&warningWifiThreshold, "warning", 50, "Warning threshold ([2-100])")
 	getWifi.Flags().Int8Var(&criticalWifiThreshold, "critical", 30, "Critical threshold ([1-99])")
 	getWifi.Flags().StringVar(&wifiInterface, "wifiInterface", "", "Wifi device interface")
+	getWifi.Flags().BoolVar(&hideSsidName, "hideSsidName", false, "Hide SSID Name")
 	err := getWifi.MarkFlagRequired("wifiInterface")
 	if err != nil {
 		println(err)
@@ -40,7 +43,7 @@ func init() {
 	}
 }
 
-func showWifiInfo(device string) {
+func showWifiInfo(device string, hideSsid bool) {
 	var printable string
 	var validPercentage int8
 	WifiCoef := 1.8
@@ -57,12 +60,16 @@ func showWifiInfo(device string) {
 		station, _ := client.StationInfo(ifi)
 		signalPercentage := WifiCoef * (float64(station[0].Signal) + 100)
 		validPercentage = validateSignalPercentage(signalPercentage)
-		printable = fmt.Sprintf("%d%% %s", validPercentage, bss.SSID)
+		ssidName := ""
+		if !hideSsidName {
+			ssidName = bss.SSID
+		}
+		printable = fmt.Sprintf("%d%% %s", validPercentage, ssidName)
 		break
 	}
 
 	color := utils.DefineReverseColor(validPercentage, warningWifiThreshold, criticalWifiThreshold)
-	utils.ColorPrint(printable, color)
+	utils.ColorPrint(strings.Trim(printable, " "), color)
 }
 
 func validateSignalPercentage(signal float64) int8 {
