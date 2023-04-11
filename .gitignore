@@ -1,2 +1,4 @@
 .idea/
 i3_status_info
+target/
+.vscode/
