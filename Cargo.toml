@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 clap = {version="4.2.1", features=["derive"]}
 sysinfo = "0.28.4"
+procfs = "0.15.1"

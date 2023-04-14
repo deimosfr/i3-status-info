@@ -1,5 +1,12 @@
-use clap::{Args, Parser, Subcommand, ValueEnum};
-use cmds::{cpu::CpuArgs, mem::MemArgs, perfmode::PerfModeArgs};
+use std::fmt::{self};
+
+use clap::{Parser, Subcommand, ValueEnum};
+use cmds::{
+    cpu::{CpuArgs, CpuStats},
+    disk_io::{DiskIoArgs, DiskIoStats},
+    mem::{MemArgs, MemStats},
+    perfmode::{PerfModeArgs, PerformanceMode},
+};
 
 mod cmds;
 
@@ -29,23 +36,66 @@ pub enum BytesUnit {
     Mb,
     Gb,
 }
-#[derive(Args)]
-struct DiskIoArgs {
-    #[arg(short, long, default_value_t=80, value_parser = clap::value_parser!(u8).range(2..100))]
-    critical: u8,
-    #[arg(short, long, default_value_t=60, value_parser = clap::value_parser!(u8).range(1..100))]
-    warning: u8,
-    #[arg(short, long, default_value = "gb")]
-    unit: BytesUnit,
+
+impl fmt::Display for BytesUnit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BytesUnit::Kb => write!(f, "KB"),
+            BytesUnit::Mb => write!(f, "MB"),
+            BytesUnit::Gb => write!(f, "GB"),
+        }
+    }
+}
+
+pub struct I3BlocksDisplay {
+    pub long_line: String,
+    pub short_line: String,
+    pub color: Option<String>,
+}
+
+pub struct I3BlocksError {
+    pub message: String,
+}
+
+impl From<String> for I3BlocksError {
+    fn from(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl I3BlocksDisplay {
+    pub fn new(long_line: String, short_line: String, color: Option<String>) -> Self {
+        Self {
+            long_line,
+            short_line,
+            color,
+        }
+    }
+
+    fn print(&self) {
+        println!("{}\n{}", self.long_line, self.short_line);
+        if let Some(color) = &self.color {
+            println!("{}", color);
+        }
+    }
+}
+
+trait I3Blocks<T> {
+    fn get(command: &T) -> Result<I3BlocksDisplay, I3BlocksError>;
 }
 
 fn main() {
     let cli = Cli::parse();
 
-    match &cli.command {
-        Commands::Cpu(x) => cmds::cpu::CpuStats::print(x.warning, x.critical, x.display),
-        Commands::Mem(x) => cmds::mem::MemStats::print(x.warning, x.critical, x.unit, x.display),
-        Commands::DiskIo(_) => cmds::disk_io::DiskIoStats::print(),
-        Commands::PerfMode(x) => cmds::perfmode::PerformanceMode::print(x.display),
+    let res = match &cli.command {
+        Commands::Cpu(x) => CpuStats::get(x),
+        Commands::Mem(x) => MemStats::get(x),
+        Commands::DiskIo(x) => DiskIoStats::get(x),
+        Commands::PerfMode(x) => PerformanceMode::get(x),
+    };
+
+    match res {
+        Ok(x) => x.print(),
+        Err(e) => eprintln!("{}", e.message),
     }
 }

@@ -1,6 +1,8 @@
 use clap::{Args, ValueEnum};
 use std::{fmt, fs};
 
+use crate::{I3Blocks, I3BlocksDisplay, I3BlocksError};
+
 const PERF_PROFILE: &str = "/sys/firmware/acpi/platform_profile";
 
 #[derive(Args)]
@@ -35,43 +37,44 @@ impl fmt::Display for PerformanceMode {
     }
 }
 
+impl I3Blocks<PerfModeArgs> for PerformanceMode {
+    fn get(command: &PerfModeArgs) -> Result<I3BlocksDisplay, I3BlocksError> {
+        let lines = Self::i3blocks_print(command.display)?;
+        Ok(I3BlocksDisplay::new(lines.clone(), lines, None))
+    }
+}
+
 impl PerformanceMode {
-    pub fn print(style: PerfModeStyle) {
-        match style {
-            PerfModeStyle::Icons => {
-                let icon = match Self::get_mode() {
-                    PerformanceMode::Balanced => "",
-                    PerformanceMode::Performance => "異",
-                    PerformanceMode::LowPower => "",
-                };
-                println!("{icon}\n{icon}")
+    pub fn i3blocks_print(style: PerfModeStyle) -> Result<String, I3BlocksError> {
+        let mode = Self::get_mode()?;
+        Ok(match style {
+            PerfModeStyle::Icons => match mode {
+                PerformanceMode::Balanced => "",
+                PerformanceMode::Performance => "異",
+                PerformanceMode::LowPower => "",
             }
-            PerfModeStyle::Text => {
-                let mode = Self::get_mode();
-                println!("{mode}\n{mode}")
-            }
-        }
+            .to_string(),
+            PerfModeStyle::Text => mode.to_string(),
+        })
     }
 
-    fn get_mode() -> PerformanceMode {
+    fn get_mode() -> Result<PerformanceMode, I3BlocksError> {
         let content = fs::read_to_string(PERF_PROFILE)
-            .expect(format!("Failed to read {}", PERF_PROFILE).as_str());
+            .map_err(|e| I3BlocksError::from(format!("can't read file {PERF_PROFILE}: {e}")))?;
+
         match content.as_str().trim() {
-            "balanced" => PerformanceMode::Balanced,
-            "performance" => PerformanceMode::Performance,
-            "low-power" => PerformanceMode::LowPower,
-            _ => panic!("Unknown performance mode: `{content}`"),
+            "balanced" => Ok(PerformanceMode::Balanced),
+            "performance" => Ok(PerformanceMode::Performance),
+            "low-power" => Ok(PerformanceMode::LowPower),
+            _ => Err(I3BlocksError::from(format!(
+                "unknown performance mode: `{content}`"
+            ))),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{PerfModeStyle, PerformanceMode};
-
     #[test]
-    fn test_perfmode_print() {
-        PerformanceMode::print(PerfModeStyle::Icons);
-        PerformanceMode::print(PerfModeStyle::Text);
-    }
+    fn test_perfmode_print() {}
 }

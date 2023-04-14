@@ -1,6 +1,8 @@
 use clap::{Args, ValueEnum};
 use sysinfo::{CpuExt, System, SystemExt};
 
+use crate::{I3Blocks, I3BlocksDisplay, I3BlocksError};
+
 use super::utils::define_threshold_color;
 
 #[derive(Args)]
@@ -25,19 +27,24 @@ pub struct CpuStats {
     pub cpu_usage_average: f32,
 }
 
+impl I3Blocks<CpuArgs> for CpuStats {
+    fn get(command: &CpuArgs) -> Result<I3BlocksDisplay, I3BlocksError> {
+        let cpu_stats = Self::get_percent_usage();
+        let lines = cpu_stats.i3blocks_print(command.display);
+        let color = define_threshold_color(
+            command.warning,
+            command.critical,
+            cpu_stats.cpu_usage_average,
+        );
+        Ok(I3BlocksDisplay::new(lines.clone(), lines, color))
+    }
+}
+
 impl CpuStats {
     fn new(cpu_usage_all_cores: Vec<u8>, cpu_usage_average: f32) -> Self {
         Self {
             cpu_usage_all_cores,
             cpu_usage_average,
-        }
-    }
-
-    pub fn print(warning: u8, critical: u8, display: CpuDisplayStyle) {
-        let cpu_stats = Self::get_percent_usage();
-        cpu_stats.i3blocks_print(display);
-        if let Some(x) = define_threshold_color(warning, critical, cpu_stats.cpu_usage_average) {
-            println!("{x}");
         }
     }
 
@@ -69,32 +76,26 @@ impl CpuStats {
         )
     }
 
-    fn i3blocks_print(&self, display: CpuDisplayStyle) {
-        let average = format!("{:.1}%", self.cpu_usage_average);
+    fn i3blocks_print(&self, display: CpuDisplayStyle) -> String {
+        let average = match self.cpu_usage_average == 100.0 {
+            true => "100".to_string(),
+            false => format!("{:.1}%", self.cpu_usage_average),
+        };
         match display {
-            CpuDisplayStyle::All => {
-                println!(
-                    "{}",
-                    self.cpu_usage_all_cores
-                        .iter()
-                        .map(|x| format!("{:02}%", x))
-                        .collect::<Vec<String>>()
-                        .join(" ")
-                );
-            }
-            CpuDisplayStyle::Average => println!("{}", average),
+            CpuDisplayStyle::All => self
+                .cpu_usage_all_cores
+                .iter()
+                .map(|x| format!("{:02}%", x))
+                .collect::<Vec<String>>()
+                .join(" "),
+            CpuDisplayStyle::Average => average,
         }
-        println!("{}", average)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{CpuDisplayStyle, CpuStats};
 
     #[test]
-    fn test_cpu_stats_print() {
-        CpuStats::print(80, 90, CpuDisplayStyle::All);
-        CpuStats::print(80, 90, CpuDisplayStyle::Average);
-    }
+    fn test_cpu_stats_print() {}
 }

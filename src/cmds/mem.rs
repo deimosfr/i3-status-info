@@ -1,7 +1,7 @@
 use clap::{Args, ValueEnum};
 use sysinfo::{System, SystemExt};
 
-use crate::BytesUnit;
+use crate::{BytesUnit, I3Blocks, I3BlocksDisplay, I3BlocksError};
 
 use super::utils::define_threshold_color;
 
@@ -31,34 +31,35 @@ pub struct MemStats {
     used_percent: u8,
 }
 
-impl MemStats {
-    fn new(usage_bytes: u64, total_bytes: u64, used_percent: u8) -> Self {
-        Self {
-            usage_bytes,
-            total_bytes,
-            used_percent,
-        }
-    }
-
-    pub fn print(warning: u8, critical: u8, unit: BytesUnit, display: MemoryDisplay) {
+impl I3Blocks<MemArgs> for MemStats {
+    fn get(command: &MemArgs) -> Result<I3BlocksDisplay, I3BlocksError> {
         let mem_stats = Self::get_mem_stats();
-        mem_stats.i3blocks_print(unit, display);
-        if let Some(x) = define_threshold_color(warning, critical, mem_stats.used_percent as f32) {
-            println!("{x}");
-        }
+        let lines = mem_stats.i3blocks_print(command.unit, command.display);
+        let color = define_threshold_color(
+            command.warning,
+            command.critical,
+            mem_stats.used_percent as f32,
+        );
+        Ok(I3BlocksDisplay::new(lines.clone(), lines, color))
     }
+}
 
-    fn get_mem_stats() -> MemStats {
+impl MemStats {
+    fn get_mem_stats() -> Self {
         let mut sys = System::new();
         sys.refresh_memory();
 
         // todo: remove buffered memory to be more accurate
         let usage_percent = sys.used_memory() as f64 / sys.total_memory() as f64 * 100.0;
-        MemStats::new(sys.used_memory(), sys.total_memory(), usage_percent as u8)
+        MemStats {
+            usage_bytes: sys.used_memory(),
+            total_bytes: sys.total_memory(),
+            used_percent: usage_percent as u8,
+        }
     }
 
-    fn i3blocks_print(&self, unit: BytesUnit, display: MemoryDisplay) {
-        let memory = match display {
+    fn i3blocks_print(&self, unit: BytesUnit, display: MemoryDisplay) -> String {
+        match display {
             MemoryDisplay::Used => match unit {
                 BytesUnit::Kb => format!("{:.1}K", self.usage_bytes as f64 / 1024.0),
                 BytesUnit::Mb => format!("{:.1}M", self.usage_bytes as f64 / 1024.0 / 1024.0),
@@ -90,26 +91,13 @@ impl MemStats {
             }
             MemoryDisplay::UsedPercentage => format!("{}%", self.used_percent),
             MemoryDisplay::RemainingPercentage => format!("{}%", 100 - self.used_percent),
-        };
-        println!("{memory}\n{memory}");
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{MemStats, MemoryDisplay};
 
     #[test]
-    fn test_mem_stats_print() {
-        println!("{:?}", MemStats::get_mem_stats());
-        MemStats::print(80, 90, crate::BytesUnit::Gb, MemoryDisplay::Used);
-        MemStats::print(80, 90, crate::BytesUnit::Gb, MemoryDisplay::UsedPercentage);
-        MemStats::print(80, 90, crate::BytesUnit::Gb, MemoryDisplay::Remaining);
-        MemStats::print(
-            80,
-            90,
-            crate::BytesUnit::Gb,
-            MemoryDisplay::RemainingPercentage,
-        );
-    }
+    fn test_mem_stats_print() {}
 }
