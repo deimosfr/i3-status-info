@@ -1,13 +1,19 @@
 # i3-status-info ![Master](https://github.com/deimosfr/i3-status-info/workflows/Push/badge.svg)
 
-Some of my i3 status info colored for i3blocks
+Some of my i3 status info, colored for i3blocks written in Rust.
 
 The main advantages are:
-* 1 binary for several elements (disk, cpu, mem...)
+* 1 binary for several usages (disk, cpu, mem...)
 * colored output based on custom thresholds
-* slow cpu and memory consumption
+* low CPU and memory consumption
+* fast
 
 ![screenshot](assets/i3-status-info.png)
+
+Note: if you want to use `icmp-check`, you will need to set linux capabilities:
+```bash
+sudo setcap cap_net_raw=pe /usr/bin/i3-status-info
+```
 
 ```
 $ i3_status_info --help

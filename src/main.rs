@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use cmds::{
     cpu::{CpuArgs, CpuStats},
     disk_io::{DiskIoArgs, DiskIoStats},
+    icmp_check::{IcmpCheck, IcmpCheckArgs},
     mem::{MemArgs, MemStats},
     perfmode::{PerfModeArgs, PerformanceMode},
     tcp_check::{TcpCheck, TcpCheckArgs},
@@ -29,8 +30,10 @@ enum Commands {
     PerfMode(PerfModeArgs),
     #[command(about = "Get Disk IO info")]
     DiskIo(DiskIoArgs),
-    #[command(about = "Get hostname/ip availability")]
+    #[command(about = "Check hostname/ip with port availability")]
     TcpCheck(TcpCheckArgs),
+    #[command(about = "Check hostname/ip availability (icmp require permissions)")]
+    IcmpCheck(IcmpCheckArgs),
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -56,6 +59,7 @@ pub struct I3BlocksDisplay {
     pub color: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct I3BlocksError {
     pub message: String,
 }
@@ -96,6 +100,7 @@ fn main() {
         Commands::DiskIo(x) => DiskIoStats::get(x),
         Commands::PerfMode(x) => PerformanceMode::get(x),
         Commands::TcpCheck(x) => TcpCheck::get(x),
+        Commands::IcmpCheck(x) => IcmpCheck::get(x),
     };
 
     match res {

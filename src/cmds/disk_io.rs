@@ -132,8 +132,8 @@ impl DiskIoStats {
         }
 
         Ok(DiskIoStats {
-            read_mb: (reads[1] - reads[0]) / DISK_CHECK_INTERVAL,
-            write_mb: (writes[1] - writes[0]) / DISK_CHECK_INTERVAL,
+            read_mb: (reads[1] - reads[0]) / (DISK_CHECK_INTERVAL + 0.5),
+            write_mb: (writes[1] - writes[0]) / (DISK_CHECK_INTERVAL + 0.5),
             io_wait: (iowait[1] - iowait[0]) / DISK_CHECK_INTERVAL,
         })
     }
