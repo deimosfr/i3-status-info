@@ -69,15 +69,15 @@ impl PrettyDiskIoStats {
 }
 
 impl I3Blocks<DiskIoArgs> for DiskIoStats {
-    fn get(command: &DiskIoArgs) -> Result<I3BlocksDisplay, I3BlocksError> {
+    fn get(command: &DiskIoArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
         let io_stats = Self::get_stats(command.device.clone())?;
         let pretty_output = io_stats.pretty_content(command.unit);
 
-        Ok(pretty_output.to_i3blocks_display(
+        Ok(Some(pretty_output.to_i3blocks_display(
             io_stats,
             command.warning_mb as f64,
             command.critical_mb as f64,
-        ))
+        )))
     }
 }
 

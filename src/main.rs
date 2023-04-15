@@ -6,6 +6,7 @@ use cmds::{
     disk_io::{DiskIoArgs, DiskIoStats},
     mem::{MemArgs, MemStats},
     perfmode::{PerfModeArgs, PerformanceMode},
+    tcp_check::{TcpCheck, TcpCheckArgs},
 };
 
 mod cmds;
@@ -28,6 +29,8 @@ enum Commands {
     PerfMode(PerfModeArgs),
     #[command(about = "Get Disk IO info")]
     DiskIo(DiskIoArgs),
+    #[command(about = "Get hostname/ip availability")]
+    TcpCheck(TcpCheckArgs),
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -81,7 +84,7 @@ impl I3BlocksDisplay {
 }
 
 trait I3Blocks<T> {
-    fn get(command: &T) -> Result<I3BlocksDisplay, I3BlocksError>;
+    fn get(command: &T) -> Result<Option<I3BlocksDisplay>, I3BlocksError>;
 }
 
 fn main() {
@@ -92,10 +95,15 @@ fn main() {
         Commands::Mem(x) => MemStats::get(x),
         Commands::DiskIo(x) => DiskIoStats::get(x),
         Commands::PerfMode(x) => PerformanceMode::get(x),
+        Commands::TcpCheck(x) => TcpCheck::get(x),
     };
 
     match res {
-        Ok(x) => x.print(),
+        Ok(x) => {
+            if let Some(data) = x {
+                data.print();
+            }
+        }
         Err(e) => eprintln!("{}", e.message),
     }
 }

@@ -32,7 +32,7 @@ pub struct MemStats {
 }
 
 impl I3Blocks<MemArgs> for MemStats {
-    fn get(command: &MemArgs) -> Result<I3BlocksDisplay, I3BlocksError> {
+    fn get(command: &MemArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
         let mem_stats = Self::get_mem_stats();
         let lines = mem_stats.i3blocks_print(command.unit, command.display);
         let color = define_threshold_color(
@@ -40,7 +40,7 @@ impl I3Blocks<MemArgs> for MemStats {
             command.critical,
             mem_stats.used_percent as f32,
         );
-        Ok(I3BlocksDisplay::new(lines.clone(), lines, color))
+        Ok(Some(I3BlocksDisplay::new(lines.clone(), lines, color)))
     }
 }
 

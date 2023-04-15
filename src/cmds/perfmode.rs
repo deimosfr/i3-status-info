@@ -38,9 +38,9 @@ impl fmt::Display for PerformanceMode {
 }
 
 impl I3Blocks<PerfModeArgs> for PerformanceMode {
-    fn get(command: &PerfModeArgs) -> Result<I3BlocksDisplay, I3BlocksError> {
+    fn get(command: &PerfModeArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
         let lines = Self::i3blocks_print(command.display)?;
-        Ok(I3BlocksDisplay::new(lines.clone(), lines, None))
+        Ok(Some(I3BlocksDisplay::new(lines.clone(), lines, None)))
     }
 }
 

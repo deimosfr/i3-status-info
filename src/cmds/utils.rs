@@ -15,9 +15,9 @@ pub fn set_text_threshold_color(
     value_as_string: Option<String>,
 ) -> String {
     let final_value = value_as_string.unwrap_or(value.to_string());
-    if value >= critical as f64 {
+    if value >= critical {
         format!("<span color='red'>{final_value}</span>")
-    } else if value >= warning as f64 {
+    } else if value >= warning {
         format!("<span color='yellow'>{final_value}</span>")
     } else {
         final_value

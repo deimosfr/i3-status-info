@@ -28,7 +28,7 @@ pub struct CpuStats {
 }
 
 impl I3Blocks<CpuArgs> for CpuStats {
-    fn get(command: &CpuArgs) -> Result<I3BlocksDisplay, I3BlocksError> {
+    fn get(command: &CpuArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
         let cpu_stats = Self::get_percent_usage();
         let lines = cpu_stats.i3blocks_print(command.display);
         let color = define_threshold_color(
@@ -36,7 +36,7 @@ impl I3Blocks<CpuArgs> for CpuStats {
             command.critical,
             cpu_stats.cpu_usage_average,
         );
-        Ok(I3BlocksDisplay::new(lines.clone(), lines, color))
+        Ok(Some(I3BlocksDisplay::new(lines.clone(), lines, color)))
     }
 }
 
