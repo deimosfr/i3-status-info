@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use cmds::{
     cpu::{CpuArgs, CpuStats},
     disk_io::{DiskIoArgs, DiskIoStats},
+    disk_uage::{DiskStats, DiskUsageArgs},
     icmp_check::{IcmpCheck, IcmpCheckArgs},
     mem::{MemArgs, MemStats},
     perfmode::{PerfModeArgs, PerformanceMode},
@@ -31,6 +32,8 @@ enum Commands {
     #[command(about = "Get Disk IO info")]
     DiskIo(DiskIoArgs),
     #[command(about = "Check hostname/ip with port availability")]
+    DiskUsage(DiskUsageArgs),
+    #[command(about = "Check disk usage")]
     TcpCheck(TcpCheckArgs),
     #[command(about = "Check hostname/ip availability (icmp require permissions)")]
     IcmpCheck(IcmpCheckArgs),
@@ -101,6 +104,7 @@ fn main() {
         Commands::PerfMode(x) => PerformanceMode::get(x),
         Commands::TcpCheck(x) => TcpCheck::get(x),
         Commands::IcmpCheck(x) => IcmpCheck::get(x),
+        Commands::DiskUsage(x) => DiskStats::get(x),
     };
 
     match res {
