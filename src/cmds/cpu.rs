@@ -78,7 +78,7 @@ impl CpuStats {
 
     fn i3blocks_print(&self, display: CpuDisplayStyle) -> String {
         let average = match self.cpu_usage_average == 100.0 {
-            true => "100".to_string(),
+            true => "100%".to_string(),
             false => format!("{:.1}%", self.cpu_usage_average),
         };
         match display {
