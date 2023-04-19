@@ -1,5 +1,5 @@
 use clap::{Args, ValueEnum};
-use sysinfo::{System, SystemExt};
+use procfs::Meminfo;
 
 use crate::{BytesUnit, I3Blocks, I3BlocksDisplay, I3BlocksError};
 
@@ -33,7 +33,7 @@ pub struct MemStats {
 
 impl I3Blocks<MemArgs> for MemStats {
     fn get(command: &MemArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
-        let mem_stats = Self::get_mem_stats();
+        let mem_stats = Self::get_mem_stats()?;
         let lines = mem_stats.i3blocks_print(command.unit, command.display);
         let color = define_threshold_color(
             command.warning,
@@ -46,17 +46,22 @@ impl I3Blocks<MemArgs> for MemStats {
 }
 
 impl MemStats {
-    fn get_mem_stats() -> Self {
-        let mut sys = System::new();
-        sys.refresh_memory();
+    fn get_mem_stats() -> Result<Self, I3BlocksError> {
+        let mem_info = Meminfo::new().unwrap();
+        let mem_available = mem_info.mem_available.ok_or(I3BlocksError::from(
+            "available memory not found".to_string(),
+        ))?;
+        let mem_shared = mem_info
+            .shmem
+            .ok_or(I3BlocksError::from("shared memory not found".to_string()))?;
 
-        // todo: remove buffered memory to be more accurate
-        let usage_percent = sys.used_memory() as f64 / sys.total_memory() as f64 * 100.0;
-        MemStats {
-            usage_bytes: sys.used_memory(),
-            total_bytes: sys.total_memory(),
+        let usage_percent =
+            (mem_available as f64 - mem_shared as f64) / mem_info.mem_total as f64 * 100.0;
+        Ok(MemStats {
+            usage_bytes: mem_info.mem_total - mem_available - mem_shared,
+            total_bytes: mem_info.mem_total,
             used_percent: usage_percent as u8,
-        }
+        })
     }
 
     fn i3blocks_print(&self, unit: BytesUnit, display: MemoryDisplay) -> String {
