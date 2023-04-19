@@ -41,6 +41,7 @@ impl I3Blocks<DiskUsageArgs> for DiskStats {
         let lines = disk_stats.i3blocks_print(command.unit, command.display);
         let color = define_threshold_color(
             command.warning_used_percentage,
+            (command.critical_used_percentage + command.warning_used_percentage) / 2,
             command.critical_used_percentage,
             disk_stats.used_percent as f32,
         );

@@ -47,18 +47,21 @@ impl PrettyDiskIoStats {
         let read_value = set_text_threshold_color(
             warning,
             critical,
+            (warning + critical) / 2.0,
             disk_io_stat.read_mb,
             Some(format!("{:>5.1}{}/s", self.read, self.read_unit)),
         );
         let write_value = set_text_threshold_color(
             warning,
             critical,
+            (warning + critical) / 2.0,
             disk_io_stat.write_mb,
             Some(format!("{:>5.1}{}/s", self.write, self.write_unit)),
         );
         let iowait_value = set_text_threshold_color(
             5.0,
             10.0,
+            (warning + critical) / 2.0,
             disk_io_stat.io_wait,
             Some(format!("{:>3.1}%", self.io_wait_percentage)),
         );

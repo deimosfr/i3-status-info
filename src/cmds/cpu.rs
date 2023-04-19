@@ -33,6 +33,7 @@ impl I3Blocks<CpuArgs> for CpuStats {
         let lines = cpu_stats.i3blocks_print(command.display);
         let color = define_threshold_color(
             command.warning,
+            (command.critical + command.warning) / 2,
             command.critical,
             cpu_stats.cpu_usage_average,
         );

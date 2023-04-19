@@ -37,6 +37,7 @@ impl I3Blocks<MemArgs> for MemStats {
         let lines = mem_stats.i3blocks_print(command.unit, command.display);
         let color = define_threshold_color(
             command.warning,
+            (command.critical + command.warning) / 2,
             command.critical,
             mem_stats.used_percent as f32,
         );
