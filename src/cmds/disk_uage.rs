@@ -3,7 +3,7 @@ use std::path::Path;
 use clap::{Args, ValueEnum};
 use sysinfo::{DiskExt, System, SystemExt};
 
-use crate::{BytesUnit, I3Blocks, I3BlocksDisplay, I3BlocksError};
+use crate::{BytesUnit, CommandStatus, I3Display, I3DisplayError};
 
 use super::utils::define_threshold_color;
 
@@ -35,8 +35,8 @@ pub struct DiskStats {
     used_percent: u8,
 }
 
-impl I3Blocks<DiskUsageArgs> for DiskStats {
-    fn get(command: &DiskUsageArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
+impl CommandStatus<DiskUsageArgs> for DiskStats {
+    fn get(command: &DiskUsageArgs) -> Result<Option<I3Display>, I3DisplayError> {
         let disk_stats = Self::get_disk_stats(command.path.clone())?;
         let lines = disk_stats.i3blocks_print(command.unit, command.display);
         let color = define_threshold_color(
@@ -45,12 +45,17 @@ impl I3Blocks<DiskUsageArgs> for DiskStats {
             command.critical_used_percentage,
             disk_stats.used_percent as f32,
         );
-        Ok(Some(I3BlocksDisplay::new(lines.clone(), lines, color)))
+        Ok(Some(I3Display::new(
+            None,
+            lines.clone(),
+            lines,
+            Some(color),
+        )))
     }
 }
 
 impl DiskStats {
-    fn get_disk_stats(disk_path: String) -> Result<Self, I3BlocksError> {
+    fn get_disk_stats(disk_path: String) -> Result<Self, I3DisplayError> {
         let disk_as_path = Path::new(&disk_path);
 
         let mut sys = System::new();
@@ -67,7 +72,7 @@ impl DiskStats {
             }
         }
 
-        Err(I3BlocksError::from(format!("Disk {disk_path} not found")))
+        Err(I3DisplayError::from(format!("Disk {disk_path} not found")))
     }
 
     fn i3blocks_print(&self, unit: BytesUnit, display: DiskDisplay) -> String {

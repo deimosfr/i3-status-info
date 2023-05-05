@@ -1,7 +1,7 @@
 use clap::{Args, ValueEnum};
 use std::{fmt, fs};
 
-use crate::{I3Blocks, I3BlocksDisplay, I3BlocksError};
+use crate::{CommandStatus, I3Display, I3DisplayError};
 
 const PERF_PROFILE: &str = "/sys/firmware/acpi/platform_profile";
 
@@ -37,15 +37,15 @@ impl fmt::Display for PerformanceMode {
     }
 }
 
-impl I3Blocks<PerfModeArgs> for PerformanceMode {
-    fn get(command: &PerfModeArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
+impl CommandStatus<PerfModeArgs> for PerformanceMode {
+    fn get(command: &PerfModeArgs) -> Result<Option<I3Display>, I3DisplayError> {
         let lines = Self::i3blocks_print(command.display)?;
-        Ok(Some(I3BlocksDisplay::new(lines.clone(), lines, None)))
+        Ok(Some(I3Display::new(None, lines.clone(), lines, None)))
     }
 }
 
 impl PerformanceMode {
-    pub fn i3blocks_print(style: PerfModeStyle) -> Result<String, I3BlocksError> {
+    pub fn i3blocks_print(style: PerfModeStyle) -> Result<String, I3DisplayError> {
         let mode = Self::get_mode()?;
         Ok(match style {
             PerfModeStyle::Icons => match mode {
@@ -58,15 +58,15 @@ impl PerformanceMode {
         })
     }
 
-    fn get_mode() -> Result<PerformanceMode, I3BlocksError> {
+    fn get_mode() -> Result<PerformanceMode, I3DisplayError> {
         let content = fs::read_to_string(PERF_PROFILE)
-            .map_err(|e| I3BlocksError::from(format!("can't read file {PERF_PROFILE}: {e}")))?;
+            .map_err(|e| I3DisplayError::from(format!("can't read file {PERF_PROFILE}: {e}")))?;
 
         match content.as_str().trim() {
             "balanced" => Ok(PerformanceMode::Balanced),
             "performance" => Ok(PerformanceMode::Performance),
             "low-power" => Ok(PerformanceMode::LowPower),
-            _ => Err(I3BlocksError::from(format!(
+            _ => Err(I3DisplayError::from(format!(
                 "unknown performance mode: `{content}`"
             ))),
         }

@@ -1,4 +1,4 @@
-use crate::{BytesUnit, I3Blocks, I3BlocksDisplay, I3BlocksError};
+use crate::{BytesUnit, CommandStatus, I3Display, I3DisplayError};
 use clap::Args;
 use procfs::diskstats;
 use std::{fs, thread::sleep};
@@ -43,36 +43,36 @@ impl PrettyDiskIoStats {
         disk_io_stat: DiskIoStats,
         warning: f64,
         critical: f64,
-    ) -> I3BlocksDisplay {
+    ) -> I3Display {
         let read_value = set_text_threshold_color(
             warning,
-            critical,
             (warning + critical) / 2.0,
+            critical,
             disk_io_stat.read_mb,
             Some(format!("{:>5.1}{}/s", self.read, self.read_unit)),
         );
         let write_value = set_text_threshold_color(
             warning,
-            critical,
             (warning + critical) / 2.0,
+            critical,
             disk_io_stat.write_mb,
             Some(format!("{:>5.1}{}/s", self.write, self.write_unit)),
         );
         let iowait_value = set_text_threshold_color(
             5.0,
+            7.5,
             10.0,
-            (warning + critical) / 2.0,
             disk_io_stat.io_wait,
             Some(format!("{:>3.1}%", self.io_wait_percentage)),
         );
 
         let lines = format!("{read_value} {write_value} {iowait_value}");
-        I3BlocksDisplay::new(lines.clone(), lines, None)
+        I3Display::new(None, lines.clone(), lines, None)
     }
 }
 
-impl I3Blocks<DiskIoArgs> for DiskIoStats {
-    fn get(command: &DiskIoArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
+impl CommandStatus<DiskIoArgs> for DiskIoStats {
+    fn get(command: &DiskIoArgs) -> Result<Option<I3Display>, I3DisplayError> {
         let io_stats = Self::get_stats(command.device.clone())?;
         let pretty_output = io_stats.pretty_content(command.unit);
 
@@ -85,9 +85,9 @@ impl I3Blocks<DiskIoArgs> for DiskIoStats {
 }
 
 impl DiskIoStats {
-    fn get_iowait() -> Result<f64, I3BlocksError> {
+    fn get_iowait() -> Result<f64, I3DisplayError> {
         let content = fs::read_to_string(PROC_STAT_PATH)
-            .map_err(|e| I3BlocksError::from(format!("can't read file {PROC_STAT_PATH}: {e}")))?;
+            .map_err(|e| I3DisplayError::from(format!("can't read file {PROC_STAT_PATH}: {e}")))?;
 
         let mut iowaits = Vec::new();
 
@@ -98,7 +98,7 @@ impl DiskIoStats {
                 let line_content = line.split_whitespace().collect::<Vec<&str>>();
                 iowaits.push(
                     line_content[5].parse::<f64>().map_err(|e| {
-                        I3BlocksError::from(format!("can't parse iowait value: {e}"))
+                        I3DisplayError::from(format!("can't parse iowait value: {e}"))
                     })?,
                 );
             }
@@ -107,7 +107,7 @@ impl DiskIoStats {
         Ok(iowaits.iter().sum::<f64>() / iowaits.len() as f64)
     }
 
-    fn get_stats(device: String) -> Result<Self, I3BlocksError> {
+    fn get_stats(device: String) -> Result<Self, I3DisplayError> {
         let mut reads = Vec::with_capacity(2);
         let mut writes = Vec::with_capacity(2);
         let mut iowait = Vec::with_capacity(2);
@@ -115,7 +115,7 @@ impl DiskIoStats {
         for _ in 0..DISK_CHECK_NUM {
             // disk troughput: https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
             let x = diskstats()
-                .map_err(|e| I3BlocksError::from(format!("can't get disks stats: {}", e)))?;
+                .map_err(|e| I3DisplayError::from(format!("can't get disks stats: {}", e)))?;
             x.iter().for_each(|x| {
                 if x.name == device {
                     reads.push(x.reads as f64);
@@ -125,7 +125,7 @@ impl DiskIoStats {
 
             // ensure device exists
             if reads.is_empty() {
-                return Err(I3BlocksError::from(format!("device `{device}` not found")));
+                return Err(I3DisplayError::from(format!("device `{device}` not found")));
             }
 
             // iowait

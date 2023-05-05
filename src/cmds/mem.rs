@@ -1,7 +1,7 @@
 use clap::{Args, ValueEnum};
 use procfs::Meminfo;
 
-use crate::{BytesUnit, I3Blocks, I3BlocksDisplay, I3BlocksError};
+use crate::{BytesUnit, CommandStatus, I3Display, I3DisplayError};
 
 use super::utils::define_threshold_color;
 
@@ -31,8 +31,8 @@ pub struct MemStats {
     used_percent: u8,
 }
 
-impl I3Blocks<MemArgs> for MemStats {
-    fn get(command: &MemArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
+impl CommandStatus<MemArgs> for MemStats {
+    fn get(command: &MemArgs) -> Result<Option<I3Display>, I3DisplayError> {
         let mem_stats = Self::get_mem_stats()?;
         let lines = mem_stats.i3blocks_print(command.unit, command.display);
         let color = define_threshold_color(
@@ -41,19 +41,24 @@ impl I3Blocks<MemArgs> for MemStats {
             command.critical,
             mem_stats.used_percent as f32,
         );
-        Ok(Some(I3BlocksDisplay::new(lines.clone(), lines, color)))
+        Ok(Some(I3Display::new(
+            None,
+            lines.clone(),
+            lines,
+            Some(color),
+        )))
     }
 }
 
 impl MemStats {
-    fn get_mem_stats() -> Result<Self, I3BlocksError> {
+    fn get_mem_stats() -> Result<Self, I3DisplayError> {
         let mem_info = Meminfo::new().unwrap();
-        let mem_available = mem_info.mem_available.ok_or(I3BlocksError::from(
+        let mem_available = mem_info.mem_available.ok_or(I3DisplayError::from(
             "available memory not found".to_string(),
         ))?;
         let mem_shared = mem_info
             .shmem
-            .ok_or(I3BlocksError::from("shared memory not found".to_string()))?;
+            .ok_or(I3DisplayError::from("shared memory not found".to_string()))?;
 
         let usage_percent =
             (mem_available as f64 - mem_shared as f64) / mem_info.mem_total as f64 * 100.0;

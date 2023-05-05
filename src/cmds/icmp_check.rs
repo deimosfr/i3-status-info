@@ -2,7 +2,7 @@ use std::{net::IpAddr, time::Duration};
 
 use clap::Args;
 
-use crate::{I3Blocks, I3BlocksDisplay, I3BlocksError};
+use crate::{CommandStatus, I3Display, I3DisplayError};
 
 #[derive(Args)]
 pub struct IcmpCheckArgs {
@@ -20,20 +20,20 @@ pub struct IcmpCheck {
     available: bool,
 }
 
-impl I3Blocks<IcmpCheckArgs> for IcmpCheck {
-    fn get(command: &IcmpCheckArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
+impl CommandStatus<IcmpCheckArgs> for IcmpCheck {
+    fn get(command: &IcmpCheckArgs) -> Result<Option<I3Display>, I3DisplayError> {
         let icmp_check = IcmpCheck::check(command.ip, command.timeout_ms)?;
         match icmp_check.available {
             true => {
                 if command.availability_text.is_some() {
                     let x = command.availability_text.clone().unwrap();
-                    return Ok(Some(I3BlocksDisplay::new(x.clone(), x, None)));
+                    return Ok(Some(I3Display::new(None, x.clone(), x, None)));
                 }
             }
             false => {
                 if command.unavailability_text.is_some() {
                     let x = command.unavailability_text.clone().unwrap();
-                    return Ok(Some(I3BlocksDisplay::new(x.clone(), x, None)));
+                    return Ok(Some(I3Display::new(None, x.clone(), x, None)));
                 }
             }
         }
@@ -42,7 +42,7 @@ impl I3Blocks<IcmpCheckArgs> for IcmpCheck {
 }
 
 impl IcmpCheck {
-    fn check(host: IpAddr, timeout_ms: u64) -> Result<Self, I3BlocksError> {
+    fn check(host: IpAddr, timeout_ms: u64) -> Result<Self, I3DisplayError> {
         let mut icmp_check = IcmpCheck { available: false };
         match ping::ping(
             host,
@@ -55,7 +55,7 @@ impl IcmpCheck {
             Ok(_) => icmp_check.available = true,
             Err(e) => {
                 if !e.to_string().contains("Resource temporarily unavailable") {
-                    return Err(I3BlocksError::from(e.to_string()));
+                    return Err(I3DisplayError::from(e.to_string()));
                 }
             }
         }

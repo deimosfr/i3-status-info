@@ -1,7 +1,7 @@
 use clap::{Args, ValueEnum};
 use sysinfo::{CpuExt, System, SystemExt};
 
-use crate::{I3Blocks, I3BlocksDisplay, I3BlocksError};
+use crate::{CommandStatus, I3Display, I3DisplayError};
 
 use super::utils::define_threshold_color;
 
@@ -27,8 +27,8 @@ pub struct CpuStats {
     pub cpu_usage_average: f32,
 }
 
-impl I3Blocks<CpuArgs> for CpuStats {
-    fn get(command: &CpuArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
+impl CommandStatus<CpuArgs> for CpuStats {
+    fn get(command: &CpuArgs) -> Result<Option<I3Display>, I3DisplayError> {
         let cpu_stats = Self::get_percent_usage();
         let lines = cpu_stats.i3blocks_print(command.display);
         let color = define_threshold_color(
@@ -37,7 +37,12 @@ impl I3Blocks<CpuArgs> for CpuStats {
             command.critical,
             cpu_stats.cpu_usage_average,
         );
-        Ok(Some(I3BlocksDisplay::new(lines.clone(), lines, color)))
+        Ok(Some(I3Display::new(
+            None,
+            lines.clone(),
+            lines,
+            Some(color),
+        )))
     }
 }
 

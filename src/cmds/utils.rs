@@ -1,12 +1,19 @@
-pub fn define_threshold_color(warning: u8, danger: u8, critical: u8, value: f32) -> Option<String> {
+use crate::I3StatusRustColorState;
+
+pub fn define_threshold_color(
+    warning: u8,
+    danger: u8,
+    critical: u8,
+    value: f32,
+) -> I3StatusRustColorState {
     if value >= critical as f32 {
-        Some("#F5737E".to_string())
+        I3StatusRustColorState::I3StatusRustStateCritical
     } else if value >= danger as f32 {
-        Some("#FFA500".to_string())
+        I3StatusRustColorState::I3StatusRustStateWarning
     } else if value >= warning as f32 {
-        Some("#FFFC00".to_string())
+        I3StatusRustColorState::I3StatusRustStateGood
     } else {
-        None
+        I3StatusRustColorState::I3StatusRustStateIdle
     }
 }
 
@@ -26,15 +33,5 @@ pub fn set_text_threshold_color(
         format!("<span color='yellow'>{final_value}</span>")
     } else {
         final_value
-    }
-}
-
-pub fn _define_reverse_threshold_color(warning: u8, critical: u8, value: f32) -> Option<String> {
-    if value <= critical as f32 {
-        Some("#f5737E".to_string())
-    } else if value <= warning as f32 {
-        Some("#FFFC00".to_string())
-    } else {
-        None
     }
 }

@@ -2,7 +2,7 @@ use std::net::TcpStream;
 
 use clap::Args;
 
-use crate::{I3Blocks, I3BlocksDisplay, I3BlocksError};
+use crate::{CommandStatus, I3Display, I3DisplayError};
 
 #[derive(Args)]
 pub struct TcpCheckArgs {
@@ -20,20 +20,20 @@ pub struct TcpCheck {
     available: bool,
 }
 
-impl I3Blocks<TcpCheckArgs> for TcpCheck {
-    fn get(command: &TcpCheckArgs) -> Result<Option<I3BlocksDisplay>, I3BlocksError> {
+impl CommandStatus<TcpCheckArgs> for TcpCheck {
+    fn get(command: &TcpCheckArgs) -> Result<Option<I3Display>, I3DisplayError> {
         let tcp_check = TcpCheck::check(command.host.clone(), command.port);
         match tcp_check.available {
             true => {
                 if command.availability_text.is_some() {
                     let x = command.availability_text.clone().unwrap();
-                    return Ok(Some(I3BlocksDisplay::new(x.clone(), x, None)));
+                    return Ok(Some(I3Display::new(None, x.clone(), x, None)));
                 }
             }
             false => {
                 if command.unavailability_text.is_some() {
                     let x = command.unavailability_text.clone().unwrap();
-                    return Ok(Some(I3BlocksDisplay::new(x.clone(), x, None)));
+                    return Ok(Some(I3Display::new(None, x.clone(), x, None)));
                 }
             }
         }
