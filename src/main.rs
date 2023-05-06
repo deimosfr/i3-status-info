@@ -180,6 +180,9 @@ fn main() {
                 OutputType::I3StatusRust => println!("{{}}"),
             },
         },
-        Err(e) => eprintln!("{}", e.message),
+        Err(e) => match cli.output {
+            OutputType::I3Blocks => eprintln!("{}", e.message),
+            OutputType::I3StatusRust => eprintln!("{{{}}}", e.message),
+        },
     }
 }
