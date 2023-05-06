@@ -22,7 +22,7 @@ pub struct IcmpCheck {
 
 impl CommandStatus<IcmpCheckArgs> for IcmpCheck {
     fn get(command: &IcmpCheckArgs) -> Result<Option<I3Display>, I3DisplayError> {
-        let icmp_check = IcmpCheck::check(command.ip, command.timeout_ms)?;
+        let icmp_check = Self::check(command.ip, command.timeout_ms)?;
         match icmp_check.available {
             true => {
                 if command.availability_text.is_some() {

@@ -7,6 +7,7 @@ use cmds::{
     disk_uage::{DiskStats, DiskUsageArgs},
     icmp_check::{IcmpCheck, IcmpCheckArgs},
     mem::{MemArgs, MemStats},
+    octoprint::{OctoprintArgs, OctoprintStatus},
     perfmode::{PerfModeArgs, PerformanceMode},
     tcp_check::{TcpCheck, TcpCheckArgs},
 };
@@ -42,8 +43,10 @@ enum Commands {
     DiskUsage(DiskUsageArgs),
     #[command(about = "Check disk usage")]
     TcpCheck(TcpCheckArgs),
-    #[command(about = "Check hostname/ip availability (icmp require permissions)")]
+    #[command(about = "Check hostname/ip availability")]
     IcmpCheck(IcmpCheckArgs),
+    #[command(about = "Check octoprint job status")]
+    Octoprint(OctoprintArgs),
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -166,6 +169,7 @@ fn main() {
         Commands::TcpCheck(x) => TcpCheck::get(x),
         Commands::IcmpCheck(x) => IcmpCheck::get(x),
         Commands::DiskUsage(x) => DiskStats::get(x),
+        Commands::Octoprint(x) => OctoprintStatus::get(x),
     };
 
     match res {
