@@ -24,8 +24,8 @@ pub struct OctoprintApiJobResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct ApiProgress {
-    pub completion: f64,
-    pub print_time_left: i64,
+    pub completion: Option<f64>,
+    pub print_time_left: Option<i64>,
 }
 
 #[derive(Debug)]
@@ -74,12 +74,12 @@ pub enum OctoprintJobState {
 impl Display for OctoprintJobState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            OctoprintJobState::Operational => write!(f, "Operational"),
+            OctoprintJobState::Operational => write!(f, "󰒲"),
             OctoprintJobState::Printing => write!(f, "Printing"),
-            OctoprintJobState::Pausing => write!(f, "Pausing"),
-            OctoprintJobState::Paused => write!(f, "Paused"),
-            OctoprintJobState::Cancelling => write!(f, "Cancelling"),
-            OctoprintJobState::Error => write!(f, "Error"),
+            OctoprintJobState::Pausing => write!(f, ""),
+            OctoprintJobState::Paused => write!(f, ""),
+            OctoprintJobState::Cancelling => write!(f, ""),
+            OctoprintJobState::Error => write!(f, ""),
             OctoprintJobState::Offline => write!(f, "Offline"),
             _ => write!(f, "Unssupported"),
         }
@@ -162,7 +162,7 @@ impl OctoprintStatus {
         };
         Ok(OctoprintStatus {
             status: content.state,
-            completion: content.progress.completion,
+            completion: content.progress.completion.unwrap_or(0.0),
         })
     }
 }
