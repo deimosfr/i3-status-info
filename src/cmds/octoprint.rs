@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use clap::Args;
+use compound_duration::format_dhms;
 use reqwest::{blocking::Response, StatusCode};
 
 use crate::{CommandStatus, I3Display, I3DisplayError};
@@ -13,6 +14,8 @@ pub struct OctoprintArgs {
     pub apikey: String,
     #[arg(short, long)]
     pub url: String,
+    #[arg(short = 'r', long, default_value_t = false)]
+    pub hide_remaining_time: bool,
 }
 
 // Octoprint API
@@ -25,12 +28,14 @@ pub struct OctoprintApiJobResponse {
 #[derive(Debug, Deserialize)]
 pub struct ApiProgress {
     pub completion: Option<f64>,
+    #[serde(rename(deserialize = "printTimeLeft"))]
     pub print_time_left: Option<i64>,
 }
 
 #[derive(Debug)]
 pub struct OctoprintStatus {
     status: OctoprintJobState,
+    remaining_time: i64,
     completion: f64,
 }
 
@@ -101,7 +106,17 @@ impl CommandStatus<OctoprintArgs> for OctoprintStatus {
             .map_err(|e| I3DisplayError::from(format!("Error: {}", e.to_string())))?;
 
         let line = match octoprint_status.status {
-            OctoprintJobState::Printing => format!("{:.2}%", octoprint_status.completion),
+            OctoprintJobState::Printing => {
+                let mut x = format!("{:.1}%", octoprint_status.completion);
+                if !command.hide_remaining_time {
+                    x = format!(
+                        "{} {}",
+                        x,
+                        format_dhms(octoprint_status.remaining_time as usize)
+                    );
+                }
+                x
+            }
             _ => octoprint_status.status.to_string(),
         };
         Ok(Some(I3Display::new(None, line.clone(), line, None)))
@@ -163,6 +178,7 @@ impl OctoprintStatus {
         Ok(OctoprintStatus {
             status: content.state,
             completion: content.progress.completion.unwrap_or(0.0),
+            remaining_time: content.progress.print_time_left.unwrap_or(0),
         })
     }
 }
