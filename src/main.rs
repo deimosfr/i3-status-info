@@ -131,7 +131,7 @@ impl I3Display {
                 };
                 println!("{} {}\n{}", icon, self.long_line, self.short_line);
                 if let Some(color) = &self.color {
-                    println!("{}", color.to_string());
+                    println!("{color}");
                 }
             }
             OutputType::I3StatusRust => {

@@ -73,20 +73,21 @@ pub enum OctoprintJobState {
     Cancelling,
     Error,
     Offline,
-    Unssupported,
+    #[serde(rename = "Offline after error")]
+    OfflineAfterError,
 }
 
 impl Display for OctoprintJobState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             OctoprintJobState::Operational => write!(f, "󰒲"),
+            OctoprintJobState::OfflineAfterError => write!(f, "󰒲"),
             OctoprintJobState::Printing => write!(f, "Printing"),
             OctoprintJobState::Pausing => write!(f, ""),
             OctoprintJobState::Paused => write!(f, ""),
             OctoprintJobState::Cancelling => write!(f, ""),
             OctoprintJobState::Error => write!(f, ""),
             OctoprintJobState::Offline => write!(f, "Offline"),
-            _ => write!(f, "Unssupported"),
         }
     }
 }
@@ -103,7 +104,7 @@ impl CommandStatus<OctoprintArgs> for OctoprintStatus {
         };
 
         let octoprint_status = Self::to_octoprint_status(res)
-            .map_err(|e| I3DisplayError::from(format!("Error: {}", e.to_string())))?;
+            .map_err(|e| I3DisplayError::from(format!("Error: {}", e)))?;
 
         let line = match octoprint_status.status {
             OctoprintJobState::Printing => {
@@ -203,12 +204,37 @@ mod tests {
 
     #[test]
     fn test_octoprint_response_struct() {
+        let api_result_boot = r#"
+{
+  "error": "No more candidates to test, and no working port/baudrate combination detected.",
+  "job": {
+    "averagePrintTime": null,
+    "estimatedPrintTime": null,
+    "filament": null,
+    "file": {
+      "date": null,
+      "display": null,
+      "name": null,
+      "origin": null,
+      "path": null,
+      "size": null
+    },
+    "lastPrintTime": null,
+    "user": null
+  },
+  "progress": {
+    "completion": null,
+    "filepos": null,
+    "printTime": null,
+    "printTimeLeft": null,
+    "printTimeLeftOrigin": null
+  },
+  "state": "Offline after error"
+}
+ "#;
+
         let api_result = r#"
-        {
-    #[test]
-    fn test_octoprint() {
-        let in_progress = r#"
-        {
+{
   "job": {
     "averagePrintTime": null,
     "estimatedPrintTime": 1960.060377407137,
@@ -239,6 +265,9 @@ mod tests {
   "state": "Printing"
 }
         "#;
+
+        let boot = serde_json::from_str::<OctoprintApiJobResponse>(api_result_boot);
+        assert!(boot.is_ok());
 
         let x = serde_json::from_str::<OctoprintApiJobResponse>(api_result);
         assert!(x.is_ok());
