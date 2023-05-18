@@ -49,9 +49,9 @@ impl PerformanceMode {
         let mode = Self::get_mode()?;
         Ok(match style {
             PerfModeStyle::Icons => match mode {
-                PerformanceMode::Balanced => "",
-                PerformanceMode::Performance => "異",
-                PerformanceMode::LowPower => "",
+                PerformanceMode::Balanced => "󰾅",
+                PerformanceMode::Performance => "󰓅",
+                PerformanceMode::LowPower => "󰾆",
             }
             .to_string(),
             PerfModeStyle::Text => mode.to_string(),
