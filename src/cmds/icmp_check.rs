@@ -56,6 +56,7 @@ impl IcmpCheck {
             Err(e) => {
                 if !e.to_string().contains("Resource temporarily unavailable")
                     && !e.to_string().contains("Network is unreachable")
+                    && !e.to_string().contains("internal error")
                 {
                     return Err(I3DisplayError::from(e.to_string()));
                 }
