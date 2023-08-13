@@ -191,6 +191,7 @@ mod tests {
     const OCTOPRINT_API_KEY: &str = "";
 
     #[test]
+    #[ignore = "can only be tested locally"]
     fn test_octoprint_api_connectivity() {
         let x = OctoprintStatus::get_job_status(
             OCTOPRINT_URL.to_string(),
