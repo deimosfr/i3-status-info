@@ -9,13 +9,14 @@ use cmds::{
     mem::{MemArgs, MemStats},
     octoprint::{OctoprintArgs, OctoprintStatus},
     perfmode::{PerfModeArgs, PerformanceMode},
+    prusa_link::{PrusaLinkArgs, PrusaLinkStatus},
     tcp_check::{TcpCheck, TcpCheckArgs},
 };
 mod cmds;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-#[command(version = "1.0.0")]
+#[command(version = "1.1.0")]
 struct Cli {
     #[arg(short, long, value_enum, default_value = "i3-status-rust")]
     output: OutputType,
@@ -47,6 +48,8 @@ enum Commands {
     IcmpCheck(IcmpCheckArgs),
     #[command(about = "Check octoprint job status")]
     Octoprint(OctoprintArgs),
+    #[command(about = "Check PrusaLink job status")]
+    PrusaLink(PrusaLinkArgs),
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -170,6 +173,7 @@ fn main() {
         Commands::IcmpCheck(x) => IcmpCheck::get(x),
         Commands::DiskUsage(x) => DiskStats::get(x),
         Commands::Octoprint(x) => OctoprintStatus::get(x),
+        Commands::PrusaLink(x) => PrusaLinkStatus::get(x),
     };
 
     match res {
