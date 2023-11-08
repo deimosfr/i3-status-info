@@ -1,57 +1,133 @@
 # i3-status-info ![Master](https://github.com/deimosfr/i3-status-info/workflows/Push/badge.svg)
 
-Some of my i3 status info, colored for i3blocks written in Rust.
+Some of my i3 status info, colored for i3-status-rs and i3blocks, written in Rust.
 
 The main advantages are:
-* 1 binary for several usages (disk, cpu, mem...)
+* 1 binary for several usages (disk, cpu, mem, 3D printer...)
 * colored output based on custom thresholds
-* low CPU and memory consumption
+* low memory consumption
 * fast
 
 ![screenshot](assets/i3-status-info.png)
 
-Note: if you want to use `icmp-check`, you will need to set linux capabilities:
+Note: if you want to use `icmp-check`, you will need to set Linux capabilities:
 ```bash
 sudo setcap cap_net_raw=pe /usr/bin/i3-status-info
 ```
 
 ```
-$ i3_status_info --help
+$ Usage: i3-status-info [OPTIONS] <COMMAND>
 
-Usage:
-  i3-status-info [command]
-
-Available Commands:
-  battery     Get Battery info
+Commands:
   cpu         Get CPU info
-  disk        Get Disk free
-  help        Help about any command
-  load        Get load info
-  mem         Get memory info
-  version     Print current version
-  wifi        Get Wifi info
+  mem         Get Memory info
+  perf-mode   Show Performance mode
+  disk-io     Get Disk IO info
+  disk-usage  Check hostname/ip with port availability
+  tcp-check   Check disk usage
+  icmp-check  Check hostname/ip availability
+  octoprint   Check octoprint job status
+  prusa-link  Check PrusaLink job status
+  help        Print this message or the help of the given subcommand(s)
 
-Flags:
-  -h, --help            help for i3-status-info
-
-Use "i3-status-info [command] --help" for more information about a command.
+Options:
+  -o, --output <OUTPUT>  [default: i3-status-rust] [possible values: i3-blocks, i3-status-rust]
+  -h, --help             Print help
+  -V, --version          Print version
 ```
 
 ```
-$ i3_status_info disk --help
-Get Disk free
+$ i3-status-info disk-io --help
+Get Disk IO info
 
-Usage:
-  i3-status-info disk [flags]
+Usage: i3-status-info disk-io [OPTIONS]
 
-Flags:
-      --critical int8       Critical threshold ([2-100]) (default 80)
-  -h, --help                help for disk
-      --volumePath string   Volume path (default "/")
-      --warning int8        Warning threshold ([1-99]) (default 60)
+Options:
+  -c, --critical <CRITICAL>  [default: 80]
+  -w, --warning <WARNING>    [default: 60]
+  -d, --display <DISPLAY>    [default: all] [possible values: all, average]
+  -h, --help                 Print help
 ```
 
-# i3block.conf example
+# Configuration example
+
+## i3status-rs.toml
+
+```
+icons_format = "{icon}"
+
+[theme]
+theme = "plain"
+[theme.overrides]
+idle_fg = "#8bc2ff"
+good_fg = "#aaff00"
+info_fg = "#8bc2ff"
+warning_fg = "#FFA01E"
+critical_fg = "#f5737e"
+
+[icons]
+icons = "awesome4"
+
+# Performance mode
+[[block]]
+block = "custom"
+command = ''' /usr/bin/i3-status-info perf-mode '''
+json = true
+interval = 5
+merge_with_next = true
+
+# Memory
+[[block]]
+block = "custom"
+command = ''' /usr/bin/i3-status-info mem --warning 70 --critical 90 '''
+json = true
+interval = 10
+format = "󰍛 $text.pango-str()"
+
+# disk io stats
+[[block]]
+block = "custom"
+command = ''' /usr/bin/i3-status-info disk-io '''
+json = true
+format = " $text.pango-str()"
+interval = 5
+
+# Octoprint
+[[block]]
+block = "custom"
+command = ''' /usr/bin/i3-status-info octoprint -u http://x.x.x.x -a your-api-key '''
+format = "󰹜 $text.pango-str() "
+json = true
+hide_when_empty = true
+interval = 180
+[[block.click]]
+button = "right"
+cmd = ''' xdg-open http://x.x.x.x '''
+
+# Prusa Link
+[[block]]
+block = "custom"
+command = ''' /usr/bin/i3-status-info prusa-link -u http://x.x.x.x -t your-token '''
+format = "$text.pango-str() "
+json = true
+hide_when_empty = true
+interval = 180
+[[block.click]]
+button = "right"
+cmd = ''' xdg-open http://x.x.x.x '''
+
+# xbox status
+[[block]]
+block = "custom"
+command = ''' /usr/bin/i3-status-info icmp-check --ip x.x.x.x --availability-text '''
+json = true
+format = "$text.pango-str() "
+hide_when_empty = true
+interval = 60
+```
+
+
+## i3block.conf
 
 Here is an example of the config for i3blocks:
 
@@ -93,46 +169,16 @@ command=~/.config/i3/i3blocks_bin/i3_status_info battery
 interval=60
 ```
 
-## Battery
+# Usage output
 
+If you're using i3status-rs (default), the output will be json output:
 ```
- 42%
- 42%
-#FFFC00
-```
-
-## Cpu
-
-```
-0.0%
-0.0%
+{"text":"32% 36% 34% 58% 85% 91% 34% 30%","short_text":"32% 36% 34% 58% 85% 91% 34% 30%","state":"Idle"}
 ```
 
-## Disk
-
+If you're using i3blocks, the output will be:
 ```
-329G
-329G
+ 18% 10% 08% 26% 12% 100% 06% 10%
+18% 10% 08% 26% 12% 100% 06% 10%
+Idle
 ```
-
-## Load
-
-```
-1.02/0.57/0.40
-1.02/0.57/0.40
-```
-
-## Memory
-
-```
-5.3G
-5.3G
-```
-
-## Wifi
-
-```
-100% SSID_NAME
-100% SSID_NAME
-```
-
