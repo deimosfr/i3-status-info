@@ -1,0 +1,19 @@
+project_name: example
+builds:
+  - main: goreleaser.go
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: i3-status-info
+    hooks:
+      post:
+        - ./.goreleaser_hook.sh {{ .Arch }} {{ .Os }} {{ .ProjectName }}
+checksum:
+  name_template: "checksums.txt"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
