@@ -16,7 +16,7 @@ mod cmds;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-#[command(version = "1.1.0")]
+#[command(version = "1.2.0")]
 struct Cli {
     #[arg(short, long, value_enum, default_value = "i3-status-rust")]
     output: OutputType,

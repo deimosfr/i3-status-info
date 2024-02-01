@@ -226,7 +226,10 @@ impl PrusaLinkStatus {
                 PrusaPrintState::Printing
                 | PrusaPrintState::Paused
                 | PrusaPrintState::Stopped
-                | PrusaPrintState::Attention => content.job.unwrap().progress,
+                | PrusaPrintState::Attention => match content.job {
+                    Some(x) => x.progress,
+                    None => return Err(PrusaLinkError::InvalidResponse(format!("{:?}", content))),
+                },
                 PrusaPrintState::Idle | PrusaPrintState::Busy | PrusaPrintState::Ready => 0.0,
                 PrusaPrintState::Finished => 100.0,
             },
@@ -289,6 +292,10 @@ pub mod tests {
         }
         "#;
 
+        let api_result_stopped = r#"
+        { "printer": { "state": "StOPPED" } }}
+        "#;
+
         let printing = serde_json::from_str::<crate::cmds::prusa_link::PrusaLinkJobResponse>(
             api_result_printing,
         );
@@ -298,5 +305,10 @@ pub mod tests {
             api_result_finished,
         );
         assert!(finished.is_ok());
+
+        let stopped = serde_json::from_str::<crate::cmds::prusa_link::PrusaLinkJobResponse>(
+            api_result_stopped,
+        );
+        assert!(stopped.is_ok());
     }
 }
